@@ -1,14 +1,17 @@
 #include "Camera.h"
+#include "Common.h"
 #include "Colour.h"
+#include "HittableList.h"
+#include "Sphere.h"
 #include "Ray.h"
 #include "Vec3.h"
 
 #include <iostream>
 
-Colour RayColour(const Ray& R)
+Colour RayColour(const Ray& R, const HittableList& world)
 {
-	Hit hit;
-	if (R.Intersects({ Point3(0.0f, 0.0f, -1.0f), 0.5f }, 0.0f, 1.0f, hit))
+	HitRecord hit;
+	if (world.Hit(R, 0.0f, Infinity, hit))
 	{
 		return 0.5f * (hit.Normal + Vec3(1.0f));
 	}
@@ -24,6 +27,10 @@ int main(int argc, char** argv)
 	constexpr unsigned int imgWidth = 400;
 	constexpr unsigned int imgHeight = static_cast<int>(imgWidth / AspectRatio);
 
+	HittableList world;
+	world.Add(std::make_shared<Sphere>(Point3(0.0f, 0.0f, -1.0f), 0.5f));
+	world.Add(std::make_shared<Sphere>(Point3(0.0f, -100.5f, -1.0f), 100.0f));
+
 	Camera camera(Point3(0.0f), 2.0f, AspectRatio, 1.0f);
 
 	std::cout << "P3\n" << imgWidth << ' ' << imgHeight << "\n255\n";
@@ -37,7 +44,7 @@ int main(int argc, char** argv)
 			const float u = static_cast<float>(i) / (imgWidth - 1);
 			const float v = static_cast<float>(j) / (imgHeight - 1);
 			Ray ray(camera.Position(), camera.LowerLeft() + (u * camera.Right()) + (v * camera.Up()) - camera.Position());
-			Colour pixelColour = RayColour(ray);
+			Colour pixelColour = RayColour(ray, world);
 			WriteColour(std::cout, pixelColour);
 		}
 	}
