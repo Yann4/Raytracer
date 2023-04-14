@@ -7,7 +7,7 @@ class Sphere : public IHittable
 {
 public:
 	Sphere() {}
-	Sphere(const Point3& Centre, const float Radius) : m_Centre(Centre), m_Radius(Radius) {}
+	Sphere(const Point3& Centre, const float Radius, std::shared_ptr<Material> Material) : m_Centre(Centre), m_Radius(Radius), m_Material(Material) {}
 
 	//IHittable
 	virtual bool Hit(const Ray& Ray, float tMin, float tMax, HitRecord& OutHit) override
@@ -41,14 +41,16 @@ public:
 
 			const Point3 pos = Ray.At(root);
 			const Vec3 OutNormal = (pos - m_Centre) / m_Radius;
-			OutHit = { root, pos, OutNormal, Ray.Direction() };
+			OutHit = { root, pos, OutNormal, Ray.Direction(), Mat() };
 			return true;
 		}
 	}
 
 	Point3 Centre() const { return m_Centre; }
 	float Radius() const { return m_Radius; }
+	std::shared_ptr<Material> Mat() const { return m_Material; }
 private:
 	Point3 m_Centre;
 	float m_Radius;
+	std::shared_ptr<Material> m_Material;
 };

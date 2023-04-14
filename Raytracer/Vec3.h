@@ -43,6 +43,11 @@ public:
 
 	float Length() const { return std::sqrt(LengthSq()); }
 	float LengthSq() const { return m_E[0] * m_E[0] + m_E[1] * m_E[1] + m_E[2] * m_E[2]; }
+	bool NearZero() const
+	{
+		const float epsilon = 1e-8f;
+		return (fabsf(m_E[0] < epsilon)) && (fabsf(m_E[1] < epsilon)) && (fabsf(m_E[2] < epsilon));
+	}
 
 private:
 	float m_E[3];
@@ -101,6 +106,11 @@ inline Vec3 Cross(const Vec3& u, const Vec3& v)
 inline Vec3 Normalised(const Vec3& v)
 {
 	return v / v.Length();
+}
+
+inline Vec3 Reflect(const Vec3& v, const Vec3& n)
+{
+	return v - (2.0f * Dot(v, n) * n);
 }
 
 inline Vec3 RandomInUnitSphere()
