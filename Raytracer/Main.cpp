@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 	world.Add(std::make_shared<Sphere>(Point3(-1.0f, 0.0f, -1.0f), -0.4f, left));
 	world.Add(std::make_shared<Sphere>(Point3(1.0f, 0.0f, -1.0f), 0.5f, right));
 
-	Camera camera(Point3(0.0f), 2.0f, AspectRatio, 1.0f);
+	Camera camera(Point3(-2.0f, 2.0f, 1.0f), Point3(0.0f, 0.0f, -1.0f), Vec3(0.0f, 1.0f, 0.0f), 20.0f, AspectRatio, 1.0f);
 
 	std::cout << "P3\n" << imgWidth << ' ' << imgHeight << "\n255\n";
 
