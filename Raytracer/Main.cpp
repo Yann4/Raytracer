@@ -34,27 +34,78 @@ Colour RayColour(const Ray& R, const HittableList& world, int Depth)
 	return (1.0f - t) * Colour(1.0f) + t * Colour(0.5f, 0.7f, 1.0f);
 }
 
+HittableList CoverScene()
+{
+	HittableList world;
+
+	std::shared_ptr<Material> groundMat = std::make_shared<Lambertian>(Colour(0.5f, 0.5f, 0.5f));
+	world.Add(std::make_shared<Sphere>(Point3(0.0f, -1000.0f, 0.0f), 1000.0f, groundMat));
+
+	for (int a = -11; a < 11; a++)
+	{
+		for (int b = -11; b < 11; b++)
+		{
+			float chooseMat = Common::Random();
+			Point3 centre(a + 0.9f * Common::Random(), 0.2f, b + 0.9f * Common::Random());
+
+			if ((centre - Point3(4.0f, 0.2f, 0.0f)).Length() > 0.9f)
+			{
+				std::shared_ptr<Material> mat;
+
+				if (chooseMat < 0.8f)
+				{
+					//Diffuse
+					Colour albedo = Colour::Random() * Colour::Random();
+					mat = std::make_shared<Lambertian>(albedo);
+					world.Add(std::make_shared<Sphere>(centre, 0.2f, mat));
+				}
+				else if (chooseMat < 0.95f)
+				{
+					//Metal
+					Colour albedo = Colour::Random(0.5f, 1.0f);
+					float fuzz = Common::Random(0.0f, 0.5f);
+					mat = std::make_shared<Metal>(albedo, fuzz);
+					world.Add(std::make_shared<Sphere>(centre, 0.2f, mat));
+				}
+				else
+				{
+					//Glass
+					mat = std::make_shared<Dielectric>(1.5f);
+					world.Add(std::make_shared<Sphere>(centre, 0.2f, mat));
+				}
+			}
+		}
+	}
+
+	std::shared_ptr<Material> material1 = std::make_shared<Dielectric>(1.5f);
+	world.Add(std::make_shared<Sphere>(Point3(0.0f, 1.0f, 0.0f), 1.0f, material1));
+
+	std::shared_ptr<Material> material2 = std::make_shared<Lambertian>(Colour(0.4f, 0.2f, 0.1f));
+	world.Add(std::make_shared<Sphere>(Point3(-4.0f, 1.0f, 0.0f), 1.0f, material2));
+
+	std::shared_ptr<Material> material3 = std::make_shared<Metal>(Colour(0.7f, 0.6f, 0.5f), 0.0f);
+	world.Add(std::make_shared<Sphere>(Point3(4.0f, 1.0f, 0.0f), 1.0f, material3));
+
+	return world;
+}
+
 int main(int argc, char** argv)
 {
-	constexpr float AspectRatio = 16.0f / 9.0f;
-	constexpr unsigned int imgWidth = 400;
+	constexpr float AspectRatio = 3.0f / 2.0f;
+	constexpr unsigned int imgWidth = 1200;
 	constexpr unsigned int imgHeight = static_cast<int>(imgWidth / AspectRatio);
-	constexpr int SamplesPerPixel = 100;
+	constexpr int SamplesPerPixel = 500;
 	constexpr int MaxDepth = 50;
 
-	std::shared_ptr<Material> ground = std::make_shared<Lambertian>(Colour(0.8f, 0.8f, 0.0f));
-	std::shared_ptr<Material> centre = std::make_shared<Lambertian>(Colour(0.1f, 0.2f, 0.5f));
-	std::shared_ptr<Material> left = std::make_shared<Dielectric>(1.5f);
-	std::shared_ptr<Material> right = std::make_shared<Metal>(Colour(0.8f, 0.6f, 0.2f), 0.0f);
+	HittableList world = CoverScene();
 
-	HittableList world;
-	world.Add(std::make_shared<Sphere>(Point3(0.0f, -100.5f, -1.0f), 100.0f, ground));
-	world.Add(std::make_shared<Sphere>(Point3(0.0f, 0.0f, -1.0f), 0.5f, centre));
-	world.Add(std::make_shared<Sphere>(Point3(-1.0f, 0.0f, -1.0f), 0.5f, left));
-	world.Add(std::make_shared<Sphere>(Point3(-1.0f, 0.0f, -1.0f), -0.4f, left));
-	world.Add(std::make_shared<Sphere>(Point3(1.0f, 0.0f, -1.0f), 0.5f, right));
+	const Point3 lookFrom = Point3(13.0f, 2.0f, 3.0f);
+	const Point3 lookAt = Point3(0.0f, 0.0f, 0.0f);
+	const Vec3 up = Vec3(0.0f, 1.0f, 0.0f);
+	const float focalDistance = 10.0f;
+	const float aperture = 0.1f;
 
-	Camera camera(Point3(-2.0f, 2.0f, 1.0f), Point3(0.0f, 0.0f, -1.0f), Vec3(0.0f, 1.0f, 0.0f), 20.0f, AspectRatio, 1.0f);
+	Camera camera(lookFrom, lookAt, up, 20.0f, AspectRatio, aperture, focalDistance);
 
 	std::cout << "P3\n" << imgWidth << ' ' << imgHeight << "\n255\n";
 

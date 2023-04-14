@@ -135,3 +135,13 @@ inline Vec3 RandomUnitVector()
 {
 	return Normalised(RandomInUnitSphere());
 }
+
+inline Vec3 RandomInUnitDisk()
+{
+	while (true)
+	{
+		Vec3 p = Vec3(Common::Random(-1.0f, 1.0f), Common::Random(-1.0f, 1.0f), 0.0f);
+		if (p.LengthSq() >= 1.0f) { continue; }
+		return p;
+	}
+}
