@@ -1,4 +1,5 @@
 #pragma once
+#include "Ray.h"
 #include "Vec3.h"
 
 class Camera
@@ -18,6 +19,7 @@ public:
 	float Width()		const { return m_AspectRatio * m_Height; }
 	float Height()		const { return m_Height; }
 
+	Ray GetRay(const float u, const float v) const { return Ray(Position(), LowerLeft() + (u * Right()) + (v * Up()) - Position()); }
 private:
 	float m_Height;
 	float m_AspectRatio;
