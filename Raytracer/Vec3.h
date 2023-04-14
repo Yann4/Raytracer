@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cmath>
+#include "Common.h"
 #include <iostream>
 
 class Vec3
@@ -9,6 +9,8 @@ public:
 	explicit Vec3() : m_E{ 0,0,0 } {}
 	explicit Vec3(float e0, float e1, float e2) : m_E{ e0, e1, e2 } {}
 	explicit Vec3(float e0) : m_E{ e0, e0, e0 } {}
+	inline static Vec3 Random() { return Vec3(Common::Random(), Common::Random(), Common::Random()); }
+	inline static Vec3 Random(const float Min, const float Max) { return Vec3(Common::Random(Min, Max), Common::Random(Min, Max), Common::Random(Min, Max)); }
 
 	float x() const { return m_E[0]; }
 	float y() const { return m_E[1]; }
@@ -99,4 +101,18 @@ inline Vec3 Cross(const Vec3& u, const Vec3& v)
 inline Vec3 Normalised(const Vec3& v)
 {
 	return v / v.Length();
+}
+
+inline Vec3 RandomInUnitSphere()
+{
+	while (true) {
+		Vec3 p = Vec3::Random(-1.0f, 1.0f);
+		if (p.LengthSq() >= 1.0f) { continue; }
+		return p;
+	}
+}
+
+inline Vec3 RandomUnitVector() 
+{
+	return Normalised(RandomInUnitSphere());
 }
