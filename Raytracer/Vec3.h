@@ -113,6 +113,15 @@ inline Vec3 Reflect(const Vec3& v, const Vec3& n)
 	return v - (2.0f * Dot(v, n) * n);
 }
 
+inline Vec3 Refract(const Vec3& uv, const Vec3& n, const float etaiOverEtat)
+{
+	const float cosTheta = std::fminf(Dot(-uv, n), 1.0f);
+	Vec3 OutPerp = etaiOverEtat * (uv + (cosTheta * n));
+	Vec3 OutParallel = -std::sqrtf(std::fabsf(1.0f - OutPerp.LengthSq())) * n;
+
+	return OutPerp + OutParallel;
+}
+
 inline Vec3 RandomInUnitSphere()
 {
 	while (true) {

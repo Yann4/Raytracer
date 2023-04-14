@@ -43,14 +43,15 @@ int main(int argc, char** argv)
 	constexpr int MaxDepth = 50;
 
 	std::shared_ptr<Material> ground = std::make_shared<Lambertian>(Colour(0.8f, 0.8f, 0.0f));
-	std::shared_ptr<Material> centre = std::make_shared<Lambertian>(Colour(0.7f, 0.3f, 0.3f));
-	std::shared_ptr<Material> left = std::make_shared<Metal>(Colour(0.8f, 0.8f, 0.8f), 0.3f);
-	std::shared_ptr<Material> right = std::make_shared<Metal>(Colour(0.8f, 0.6f, 0.2f), 1.0f);
+	std::shared_ptr<Material> centre = std::make_shared<Lambertian>(Colour(0.1f, 0.2f, 0.5f));
+	std::shared_ptr<Material> left = std::make_shared<Dielectric>(1.5f);
+	std::shared_ptr<Material> right = std::make_shared<Metal>(Colour(0.8f, 0.6f, 0.2f), 0.0f);
 
 	HittableList world;
 	world.Add(std::make_shared<Sphere>(Point3(0.0f, -100.5f, -1.0f), 100.0f, ground));
 	world.Add(std::make_shared<Sphere>(Point3(0.0f, 0.0f, -1.0f), 0.5f, centre));
 	world.Add(std::make_shared<Sphere>(Point3(-1.0f, 0.0f, -1.0f), 0.5f, left));
+	world.Add(std::make_shared<Sphere>(Point3(-1.0f, 0.0f, -1.0f), -0.4f, left));
 	world.Add(std::make_shared<Sphere>(Point3(1.0f, 0.0f, -1.0f), 0.5f, right));
 
 	Camera camera(Point3(0.0f), 2.0f, AspectRatio, 1.0f);
