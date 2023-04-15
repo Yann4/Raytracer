@@ -15,7 +15,7 @@
 #include <future>
 #include <vector>
 
-enum class Scene { Cover, Nuts };
+enum class Scene { Cover, Nuts, Noise };
 
 struct ScanlineResult
 {
@@ -148,12 +148,24 @@ BoundingVolumeHierarchy TwoSpheres()
 	return BoundingVolumeHierarchy(objects);
 }
 
+BoundingVolumeHierarchy TwoPerlinSpheres()
+{
+	HittableList objects;
+
+	std::shared_ptr<NoiseTexture> noiseTexture = std::make_shared<NoiseTexture>(4.0f);
+
+	objects.Add(std::make_shared<Sphere>(Point3(0.0f, -1000.0f, 0.0f), 1000.0f, std::make_shared<Lambertian>(noiseTexture)));
+	objects.Add(std::make_shared<Sphere>(Point3(0.0f, 2.0f, 0.0f), 2.0f, std::make_shared<Lambertian>(noiseTexture)));
+
+	return BoundingVolumeHierarchy(objects);
+}
+
 int main(int argc, char** argv)
 {
 	using Clock = std::chrono::high_resolution_clock;
 	const auto startTime = Clock::now();
 
-	constexpr Settings settings{ 1200, 16.0f / 9.0f, 100, 100, Scene::Nuts };
+	constexpr Settings settings{ 1200, 16.0f / 9.0f, 100, 100, Scene::Noise };
 
 	Point3 lookFrom;
 	Point3 lookAt;
@@ -175,6 +187,14 @@ int main(int argc, char** argv)
 		break;
 	case Scene::Nuts:
 		world = TwoSpheres();
+		lookFrom = Point3(13.0f, 2.0f, 3.0f);
+		lookAt = Point3(0.0f, 0.0f, 0.0f);
+		fov = 20.0f;
+		aperture = 0.1f;
+		focalDistance = 10.0f;
+		break;
+	case Scene::Noise:
+		world = TwoPerlinSpheres();
 		lookFrom = Point3(13.0f, 2.0f, 3.0f);
 		lookAt = Point3(0.0f, 0.0f, 0.0f);
 		fov = 20.0f;

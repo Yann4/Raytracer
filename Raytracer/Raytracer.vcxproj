@@ -161,6 +161,7 @@
     <ClInclude Include="HittableList.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="MovingSphere.h" />
+    <ClInclude Include="Perlin.h" />
     <ClInclude Include="Ray.h" />
     <ClInclude Include="Sphere.h" />
     <ClInclude Include="Texture.h" />

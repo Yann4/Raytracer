@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common.h"
+#include "Perlin.h"
 
 class Texture
 {
@@ -41,4 +42,20 @@ public:
 	}
 private:
 	std::shared_ptr<Texture> m_Even, m_Odd;
+};
+
+class NoiseTexture : public Texture
+{
+public:
+	NoiseTexture(){}
+	NoiseTexture(const float Scale) : m_Scale(Scale) {}
+
+	virtual Colour Value(const float u, const float v, const Point3& p) const override
+	{
+		return Colour(1.0f) * 0.5f * (1.0f + std::sin((m_Scale*p.z()) + (10.0f * m_Noise.Turbulence(p * m_Scale))));
+	}
+
+private:
+	Perlin m_Noise;
+	float m_Scale;
 };
