@@ -11,14 +11,18 @@ struct HitRecord
 {
 	bool HasHit;
 	float T;
+	float U, V;
 	Point3 Position;
 	bool FrontFace;
 	Vec3 Normal;
 	std::shared_ptr<Material> HitMaterial;
 
 	HitRecord() : HasHit(false), T(-1.0f), Position(), Normal(), HitMaterial(nullptr) {}
-	HitRecord(const float T, const Point3& Pos, const Vec3& Normal, const Vec3& RayDirection, std::shared_ptr<Material> Material) : HasHit(true), T(T), Position(Pos),
-		FrontFace(Dot(RayDirection, Normal) < 0.0f), Normal(FrontFace ? Normal : -Normal), HitMaterial(Material) {}
+	HitRecord(const float T, const Point3& Pos, const Vec3& Normal, const Vec3& RayDirection, std::shared_ptr<Material> Material,
+		const float u, const float v) 
+		: HasHit(true), T(T), Position(Pos), FrontFace(Dot(RayDirection, Normal) < 0.0f), Normal(FrontFace ? Normal : -Normal), 
+		HitMaterial(Material), U(u), V(v)
+	{}
 };
 
 class IHittable

@@ -15,6 +15,8 @@
 #include <future>
 #include <vector>
 
+enum class Scene { Cover, Nuts };
+
 struct ScanlineResult
 {
 	int ScanlineIndex;
@@ -27,7 +29,7 @@ struct Settings
 	float AspectRatio;
 	int MaxDepth;
 	int SamplesPerPixel;
-
+	Scene SelectedScene;
 	constexpr int Height() const { return static_cast<int>(Width / AspectRatio); }
 };
 
@@ -82,8 +84,8 @@ BoundingVolumeHierarchy CoverScene()
 {
 	HittableList world;
 
-	std::shared_ptr<Material> groundMat = std::make_shared<Lambertian>(Colour(0.5f, 0.5f, 0.5f));
-	world.Add(std::make_shared<Sphere>(Point3(0.0f, -1000.0f, 0.0f), 1000.0f, groundMat));
+	std::shared_ptr<Texture> checkerTexture = std::make_shared<CheckerTexture>(Colour(0.2f, 0.3f, 0.1f), Colour(0.9f));
+	world.Add(std::make_shared<Sphere>(Point3(0.0f, -1000.0f, 0.0f), 1000.0f, std::make_shared<Lambertian>(checkerTexture)));
 
 	for (int a = -11; a < 11; a++)
 	{
@@ -134,21 +136,52 @@ BoundingVolumeHierarchy CoverScene()
 	return BoundingVolumeHierarchy(world, 0.0f, 1.0f);
 }
 
+BoundingVolumeHierarchy TwoSpheres()
+{
+	HittableList objects;
+
+	std::shared_ptr<CheckerTexture> checker = std::make_shared<CheckerTexture>(Colour(0.2f, 0.3f, 0.1f), Colour(0.9f, 0.9f, 0.9f));
+
+	objects.Add(std::make_shared<Sphere>(Point3(0.0f, -10.0f, 0.0f), 10.0f, std::make_shared<Lambertian>(checker)));
+	objects.Add(std::make_shared<Sphere>(Point3(0.0f, 10.0f, 0.0f), 10.0f, std::make_shared<Lambertian>(checker)));
+
+	return BoundingVolumeHierarchy(objects);
+}
+
 int main(int argc, char** argv)
 {
 	using Clock = std::chrono::high_resolution_clock;
 	const auto startTime = Clock::now();
 
-	constexpr Settings settings{ 1200, 16.0f / 9.0f, 500, 500 };
+	constexpr Settings settings{ 1200, 16.0f / 9.0f, 100, 100, Scene::Nuts };
 
-	const BoundingVolumeHierarchy world = CoverScene();
+	Point3 lookFrom;
+	Point3 lookAt;
+	Vec3 up = Vec3(0.0f, 1.0f, 0.0f);
+	float focalDistance;
+	float aperture;
+	float fov;
 
-	const Point3 lookFrom = Point3(13.0f, 2.0f, 3.0f);
-	const Point3 lookAt = Point3(0.0f, 0.0f, 0.0f);
-	const Vec3 up = Vec3(0.0f, 1.0f, 0.0f);
-	const float focalDistance = 10.0f;
-	const float aperture = 0.1f;
-	const float fov = 20.0f;
+	BoundingVolumeHierarchy world;
+	switch (settings.SelectedScene)
+	{
+	case Scene::Cover:
+		world = CoverScene();
+		lookFrom = Point3(13.0f, 2.0f, 3.0f);
+		lookAt = Point3(0.0f, 0.0f, 0.0f);
+		fov = 20.0f;
+		aperture = 0.1f;
+		focalDistance = 10.0f;
+		break;
+	case Scene::Nuts:
+		world = TwoSpheres();
+		lookFrom = Point3(13.0f, 2.0f, 3.0f);
+		lookAt = Point3(0.0f, 0.0f, 0.0f);
+		fov = 20.0f;
+		aperture = 0.1f;
+		focalDistance = 10.0f;
+		break;
+	}
 
 	Camera camera(lookFrom, lookAt, up, fov, settings.AspectRatio, aperture, focalDistance, 0.0f, 1.0f);
 

@@ -4,6 +4,7 @@
 #include "Colour.h"
 #include "Hittable.h"
 #include "Ray.h"
+#include "Texture.h"
 
 struct HitRecord;
 
@@ -16,7 +17,8 @@ public:
 class Lambertian : public Material
 {
 public:
-	Lambertian(const Colour& Albedo) : m_Albedo(Albedo) {}
+	Lambertian(const Colour& Albedo) : m_Albedo(std::make_shared<SolidColour>(Albedo)) {}
+	Lambertian(const std::shared_ptr<Texture> Albedo) : m_Albedo(Albedo) {}
 
 	virtual bool Scatter(const Ray& R, const HitRecord& Hit, Colour& Attenuation, Ray& Scattered) const override
 	{
@@ -29,12 +31,12 @@ public:
 		}
 
 		Scattered = Ray(Hit.Position, scatterDirection, R.Time());
-		Attenuation = m_Albedo;
+		Attenuation = m_Albedo->Value(Hit.U, Hit.V, Hit.Position);
 		return true;
 	}
 
 private:
-	Colour m_Albedo;
+	std::shared_ptr<Texture> m_Albedo;
 };
 
 class Metal : public Material

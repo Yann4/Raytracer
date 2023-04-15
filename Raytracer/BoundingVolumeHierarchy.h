@@ -38,7 +38,7 @@ class BoundingVolumeHierarchy : public IHittable
 {
 public:
 	BoundingVolumeHierarchy() {}
-	BoundingVolumeHierarchy(const HittableList& List, const float T0, const float T1)
+	BoundingVolumeHierarchy(const HittableList& List, const float T0 = 0.0f, const float T1 = 0.0f)
 		: BoundingVolumeHierarchy(List.Objects(), 0, List.Objects().size(), T0, T1)
 	{}
 	BoundingVolumeHierarchy(const std::vector<std::shared_ptr<IHittable>>& Objects, const size_t Start, const size_t End, const float T0, const float T1)

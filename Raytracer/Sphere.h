@@ -3,6 +3,8 @@
 #include "Hittable.h"
 #include "Vec3.h"
 
+#include <tuple>
+
 class Sphere : public IHittable
 {
 public:
@@ -39,7 +41,8 @@ public:
 
 			const Point3 pos = Ray.At(root);
 			const Vec3 OutNormal = (pos - m_Centre) / m_Radius;
-			OutHit = { root, pos, OutNormal, Ray.Direction(), Mat() };
+			const auto [u, v] = GetUV(OutNormal);
+			OutHit = { root, pos, OutNormal, Ray.Direction(), Mat(), u, v };
 			return true;
 		}
 	}
@@ -48,6 +51,14 @@ public:
 	{
 		OutBox = { Centre() - Vec3(m_Radius), Centre() + Vec3(m_Radius) };
 		return true;
+	}
+
+	static std::tuple<float, float> GetUV(const Point3& P)
+	{
+		const float theta = std::acos(-P.y());
+		const float phi = std::atan2(-P.z(), P.x()) + Common::pi;
+
+		return { phi / (2 * Common::pi), theta / Common::pi };
 	}
 
 	Point3 Centre() const { return m_Centre; }

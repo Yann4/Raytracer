@@ -42,7 +42,8 @@ public:
 
 			const Point3 rayPos = R.At(root);
 			const Vec3 outNormal = (rayPos - Position(R.Time())) / m_Radius;
-			OutHit = { root, rayPos, outNormal, R.Direction(), m_Material };
+			const auto [u, v] = GetUV(outNormal);
+			OutHit = { root, rayPos, outNormal, R.Direction(), m_Material, u, v };
 			return true;
 		}
 	}
@@ -54,6 +55,14 @@ public:
 
 		OutBox = AABB(box0, box1);
 		return true;
+	}
+
+	static std::tuple<float, float> GetUV(const Point3& P)
+	{
+		const float theta = std::acos(-P.y());
+		const float phi = std::atan2(-P.z(), P.x()) + Common::pi;
+
+		return { phi / (2 * Common::pi), theta / Common::pi };
 	}
 
 private:
