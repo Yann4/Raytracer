@@ -21,7 +21,6 @@ public:
 
 		if (discriminant < 0)
 		{
-			OutHit = {};
 			return false;
 		}
 		else
@@ -34,7 +33,6 @@ public:
 				root = (-halfB + sqrtD) / a;
 				if (root < tMin || tMax < root)
 				{
-					OutHit = {};
 					return false;
 				}
 			}

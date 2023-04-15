@@ -7,7 +7,27 @@
 #include "Ray.h"
 #include "Vec3.h"
 
+#include <chrono>
 #include <iostream>
+#include <thread>
+#include <future>
+#include <vector>
+
+struct ScanlineResult
+{
+	int ScanlineIndex;
+	std::vector<Colour> ScanlineData;
+};
+
+struct Settings
+{
+	int Width;
+	float AspectRatio;
+	int MaxDepth;
+	int SamplesPerPixel;
+
+	constexpr int Height() const { return static_cast<int>(Width * AspectRatio); }
+};
 
 Colour RayColour(const Ray& R, const HittableList& world, int Depth)
 {
@@ -32,6 +52,28 @@ Colour RayColour(const Ray& R, const HittableList& world, int Depth)
 	Vec3 unitDir = Normalised(R.Direction());
 	float t = 0.5f * (unitDir.y() + 1.0f);
 	return (1.0f - t) * Colour(1.0f) + t * Colour(0.5f, 0.7f, 1.0f);
+}
+
+ScanlineResult TraceScanline(const int Scanline, const Camera& Camera, const HittableList& World, const Settings& Config)
+{
+	ScanlineResult result;
+	result.ScanlineIndex = Scanline;
+
+	for (int x = 0; x < Config.Width; x++)
+	{
+		Colour pixelColour{ 0.0f, 0.0f, 0.0f };
+		for (int sample = 0; sample < Config.SamplesPerPixel; sample++)
+		{
+			const float u = (static_cast<float>(x) + Common::Random()) / (Config.Width - 1);
+			const float v = (static_cast<float>(Scanline) + Common::Random()) / (Config.Height() - 1);
+			Ray ray = Camera.GetRay(u, v);
+			pixelColour += RayColour(ray, World, Config.MaxDepth);
+		}
+
+		result.ScanlineData.push_back(pixelColour);
+	}
+
+	return result;
 }
 
 HittableList CoverScene()
@@ -91,42 +133,59 @@ HittableList CoverScene()
 
 int main(int argc, char** argv)
 {
-	constexpr float AspectRatio = 3.0f / 2.0f;
-	constexpr unsigned int imgWidth = 1200;
-	constexpr unsigned int imgHeight = static_cast<int>(imgWidth / AspectRatio);
-	constexpr int SamplesPerPixel = 500;
-	constexpr int MaxDepth = 50;
+	using Clock = std::chrono::high_resolution_clock;
+	const auto startTime = Clock::now();
 
-	HittableList world = CoverScene();
+	constexpr Settings settings{ 400, 3.0f / 2.0f, 50, 50 };
+
+	const HittableList world = CoverScene();
 
 	const Point3 lookFrom = Point3(13.0f, 2.0f, 3.0f);
 	const Point3 lookAt = Point3(0.0f, 0.0f, 0.0f);
 	const Vec3 up = Vec3(0.0f, 1.0f, 0.0f);
 	const float focalDistance = 10.0f;
 	const float aperture = 0.1f;
+	const float fov = 20.0f;
 
-	Camera camera(lookFrom, lookAt, up, 20.0f, AspectRatio, aperture, focalDistance);
+	Camera camera(lookFrom, lookAt, up, fov, settings.AspectRatio, aperture, focalDistance);
 
-	std::cout << "P3\n" << imgWidth << ' ' << imgHeight << "\n255\n";
+	std::cout << "P3\n" << settings.Width << ' ' << settings.Height() << "\n255\n";
 
-	for (int j = imgHeight - 1; j >= 0; --j)
+	constexpr int ConcurrentThreadCount = 64;
+	std::future<ScanlineResult> jobs[ConcurrentThreadCount];
+	const auto finishedSetup = Clock::now();
+
+	int scanLineIdx = settings.Height() - 1;
+	while (scanLineIdx > 0)
 	{
-		std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
-
-		for (int i = 0; i < imgWidth; i++)
+		int runningThreads = 0;
+		for (int threadIdx = 0; threadIdx < ConcurrentThreadCount; threadIdx++)
 		{
-			Colour pixelColour{ 0.0f, 0.0f, 0.0f };
-			for (int sample = 0; sample < SamplesPerPixel; sample++)
+			if (scanLineIdx > 0)
 			{
-				const float u = (static_cast<float>(i) + Common::Random()) / (imgWidth - 1);
-				const float v = (static_cast<float>(j) + Common::Random()) / (imgHeight - 1);
-				Ray ray = camera.GetRay(u, v);
-				pixelColour += RayColour(ray, world, MaxDepth);
+				jobs[threadIdx] = std::async(&TraceScanline, scanLineIdx, camera, world, settings);
+				scanLineIdx--;
+				runningThreads++;
 			}
-
-			WriteColour(std::cout, pixelColour, SamplesPerPixel);
 		}
+
+		for (int threadIdx = 0; threadIdx < runningThreads; threadIdx++)
+		{
+			ScanlineResult result = jobs[threadIdx].get();
+			for (const Colour& colour : result.ScanlineData)
+			{
+				WriteColour(std::cout, colour, settings.SamplesPerPixel);
+			}
+		}
+
+		std::cerr << "\rScanlines remaining: " << scanLineIdx << ' ' << std::flush;
 	}
 
-	std::cerr << "\nDone.\n";
+	const auto finishedRender = Clock::now();
+
+	using DurationUnit = std::chrono::duration<float>;
+	const DurationUnit setupDuration = std::chrono::duration_cast<DurationUnit>(finishedSetup - startTime);
+	const DurationUnit renderDuration = std::chrono::duration_cast<DurationUnit>(finishedRender - finishedSetup);
+	const DurationUnit totalDuration = std::chrono::duration_cast<DurationUnit>(finishedRender - startTime);
+	std::cerr << "\nDone.\nSetup time: " << setupDuration.count() << "s\nRender time: " << renderDuration.count() << "s\nTotal time: " << totalDuration.count() << "s";
 }
