@@ -1,8 +1,10 @@
+#include "BoundingVolumeHierarchy.h"
 #include "Camera.h"
 #include "Common.h"
 #include "Colour.h"
 #include "HittableList.h"
 #include "Material.h"
+#include "MovingSphere.h"
 #include "Sphere.h"
 #include "Ray.h"
 #include "Vec3.h"
@@ -26,10 +28,10 @@ struct Settings
 	int MaxDepth;
 	int SamplesPerPixel;
 
-	constexpr int Height() const { return static_cast<int>(Width * AspectRatio); }
+	constexpr int Height() const { return static_cast<int>(Width / AspectRatio); }
 };
 
-Colour RayColour(const Ray& R, const HittableList& world, int Depth)
+Colour RayColour(const Ray& R, const BoundingVolumeHierarchy& world, int Depth)
 {
 	if (Depth <= 0)
 	{
@@ -54,7 +56,7 @@ Colour RayColour(const Ray& R, const HittableList& world, int Depth)
 	return (1.0f - t) * Colour(1.0f) + t * Colour(0.5f, 0.7f, 1.0f);
 }
 
-ScanlineResult TraceScanline(const int Scanline, const Camera& Camera, const HittableList& World, const Settings& Config)
+ScanlineResult TraceScanline(const int Scanline, const Camera& Camera, const BoundingVolumeHierarchy& World, const Settings& Config)
 {
 	ScanlineResult result;
 	result.ScanlineIndex = Scanline;
@@ -76,7 +78,7 @@ ScanlineResult TraceScanline(const int Scanline, const Camera& Camera, const Hit
 	return result;
 }
 
-HittableList CoverScene()
+BoundingVolumeHierarchy CoverScene()
 {
 	HittableList world;
 
@@ -99,7 +101,8 @@ HittableList CoverScene()
 					//Diffuse
 					Colour albedo = Colour::Random() * Colour::Random();
 					mat = std::make_shared<Lambertian>(albedo);
-					world.Add(std::make_shared<Sphere>(centre, 0.2f, mat));
+					Point3 centre2 = centre + Point3(0.0f, Common::Random(0.0f, 0.5f), 0.0f);
+					world.Add(std::make_shared<MovingSphere>(centre, centre2, 0.0f, 1.0f, 0.2f, mat));
 				}
 				else if (chooseMat < 0.95f)
 				{
@@ -128,7 +131,7 @@ HittableList CoverScene()
 	std::shared_ptr<Material> material3 = std::make_shared<Metal>(Colour(0.7f, 0.6f, 0.5f), 0.0f);
 	world.Add(std::make_shared<Sphere>(Point3(4.0f, 1.0f, 0.0f), 1.0f, material3));
 
-	return world;
+	return BoundingVolumeHierarchy(world, 0.0f, 1.0f);
 }
 
 int main(int argc, char** argv)
@@ -136,9 +139,9 @@ int main(int argc, char** argv)
 	using Clock = std::chrono::high_resolution_clock;
 	const auto startTime = Clock::now();
 
-	constexpr Settings settings{ 400, 3.0f / 2.0f, 50, 50 };
+	constexpr Settings settings{ 1200, 16.0f / 9.0f, 500, 500 };
 
-	const HittableList world = CoverScene();
+	const BoundingVolumeHierarchy world = CoverScene();
 
 	const Point3 lookFrom = Point3(13.0f, 2.0f, 3.0f);
 	const Point3 lookAt = Point3(0.0f, 0.0f, 0.0f);
@@ -147,7 +150,7 @@ int main(int argc, char** argv)
 	const float aperture = 0.1f;
 	const float fov = 20.0f;
 
-	Camera camera(lookFrom, lookAt, up, fov, settings.AspectRatio, aperture, focalDistance);
+	Camera camera(lookFrom, lookAt, up, fov, settings.AspectRatio, aperture, focalDistance, 0.0f, 1.0f);
 
 	std::cout << "P3\n" << settings.Width << ' ' << settings.Height() << "\n255\n";
 

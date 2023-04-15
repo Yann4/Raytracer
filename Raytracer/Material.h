@@ -28,7 +28,7 @@ public:
 			scatterDirection = Hit.Normal;
 		}
 
-		Scattered = Ray(Hit.Position, scatterDirection);
+		Scattered = Ray(Hit.Position, scatterDirection, R.Time());
 		Attenuation = m_Albedo;
 		return true;
 	}
@@ -45,7 +45,7 @@ public:
 	virtual bool Scatter(const Ray& R, const HitRecord& Hit, Colour& Attenuation, Ray& Scattered) const override
 	{
 		Vec3 reflected = Reflect(Normalised(R.Direction()), Hit.Normal);
-		Scattered = Ray(Hit.Position, reflected + (m_Fuzziness*RandomInUnitSphere()));
+		Scattered = Ray(Hit.Position, reflected + (m_Fuzziness*RandomInUnitSphere()), R.Time());
 		Attenuation = m_Albedo;
 
 		return (Dot(Scattered.Direction(), Hit.Normal) > 0.0f);
@@ -79,7 +79,7 @@ public:
 			direction = Refract(unitDirection, Hit.Normal, refractionRatio);
 		}
 
-		Scattered = Ray(Hit.Position, direction);
+		Scattered = Ray(Hit.Position, direction, R.Time());
 		return true;
 	}
 

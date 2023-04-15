@@ -24,4 +24,9 @@ namespace Common
 		// Returns a random real in [min,max).
 		return Min + ((Max - Min) * Common::Random());
 	}
+
+	inline int RandomInt(const int Min, const int Max)
+	{
+		return static_cast<int>(Random(static_cast<float>(Min), static_cast<float>(Max + 1)));
+	}
 }

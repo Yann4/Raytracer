@@ -10,7 +10,7 @@ public:
 	Sphere(const Point3& Centre, const float Radius, std::shared_ptr<Material> Material) : m_Centre(Centre), m_Radius(Radius), m_Material(Material) {}
 
 	//IHittable
-	virtual bool Hit(const Ray& Ray, float tMin, float tMax, HitRecord& OutHit) override
+	virtual bool Hit(const Ray& Ray, float tMin, float tMax, HitRecord& OutHit) const override
 	{
 		Point3 Oc = Ray.Origin() - m_Centre;
 
@@ -42,6 +42,12 @@ public:
 			OutHit = { root, pos, OutNormal, Ray.Direction(), Mat() };
 			return true;
 		}
+	}
+
+	virtual bool BoundingBox(const float T0, const float T1, AABB& OutBox) const override
+	{
+		OutBox = { Centre() - Vec3(m_Radius), Centre() + Vec3(m_Radius) };
+		return true;
 	}
 
 	Point3 Centre() const { return m_Centre; }

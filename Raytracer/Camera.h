@@ -8,8 +8,10 @@ class Camera
 public:
 	Camera() {}
 	Camera(const Point3& Position, const Point3& LookAt, const Vec3& Up,
-			const float VFov, const float AspectRatio, const float Aperture, const float FocalLength) :
-		m_FOV(VFov), m_AspectRatio(AspectRatio), m_FocalLength(FocalLength), m_Position(Position), m_Target(LookAt), m_Up(Up), m_Aperture(Aperture)
+			const float VFov, const float AspectRatio, const float Aperture, const float FocalLength,
+			const float T0 = 0.0f, const float T1 = 0.0f) :
+		m_FOV(VFov), m_AspectRatio(AspectRatio), m_FocalLength(FocalLength), m_Position(Position), m_Target(LookAt), m_Up(Up), m_Aperture(Aperture),
+		m_T0(T0), m_T1(T1)
 	{}
 
 	Point3 Position()	const { return m_Position; }
@@ -32,7 +34,7 @@ public:
 		const Vec3 v = Cross(Forward(), u);
 		const Vec3 random = LensRadius() * RandomInUnitDisk();
 		const Vec3 offset = (u * random.x()) + (v * random.y());
-		return Ray(Position() + offset, LowerLeft() + (s * Horizontal()) + (t * Vertical()) - Position() - offset);
+		return Ray(Position() + offset, LowerLeft() + (s * Horizontal()) + (t * Vertical()) - Position() - offset, Common::Random(m_T0, m_T1));
 	}
 private:
 	float m_FOV;
@@ -42,4 +44,5 @@ private:
 	Vec3 m_Target;
 	Vec3 m_Up;
 	float m_Aperture;
+	float m_T0, m_T1;
 };

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AABB.h"
 #include "Ray.h"
 #include "Vec3.h"
 #include <memory>
@@ -23,5 +24,6 @@ struct HitRecord
 class IHittable
 {
 public:
-	virtual bool Hit(const Ray& ray, float tMin, float tMax, HitRecord& outHit) = 0;
+	virtual bool Hit(const Ray& R, float TMin, float TMax, HitRecord& OutHit) const = 0;
+	virtual bool BoundingBox(const float T0, const float T1, AABB& OutBox) const = 0;
 };
