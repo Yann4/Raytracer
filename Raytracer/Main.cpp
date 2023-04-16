@@ -15,7 +15,7 @@
 #include <future>
 #include <vector>
 
-enum class Scene { Cover, Nuts, Noise };
+enum class Scene { Cover, Nuts, Noise, Earth };
 
 struct ScanlineResult
 {
@@ -160,12 +160,23 @@ BoundingVolumeHierarchy TwoPerlinSpheres()
 	return BoundingVolumeHierarchy(objects);
 }
 
+BoundingVolumeHierarchy Earth()
+{
+	HittableList objects;
+
+	std::shared_ptr<Texture> earthTexture = std::make_shared<ImageTexture>("../../Assets/earthmap.jpg");
+	std::shared_ptr<Material> earthMaterial = std::make_shared<Lambertian>(earthTexture);
+	objects.Add(std::make_shared<Sphere>(Point3{ 0.0f }, 2.0f, earthMaterial));
+
+	return BoundingVolumeHierarchy(objects);
+}
+
 int main(int argc, char** argv)
 {
 	using Clock = std::chrono::high_resolution_clock;
 	const auto startTime = Clock::now();
 
-	constexpr Settings settings{ 1200, 16.0f / 9.0f, 100, 100, Scene::Noise };
+	constexpr Settings settings{ 1200, 16.0f / 9.0f, 100, 100, Scene::Earth };
 
 	Point3 lookFrom;
 	Point3 lookAt;
@@ -195,6 +206,14 @@ int main(int argc, char** argv)
 		break;
 	case Scene::Noise:
 		world = TwoPerlinSpheres();
+		lookFrom = Point3(13.0f, 2.0f, 3.0f);
+		lookAt = Point3(0.0f, 0.0f, 0.0f);
+		fov = 20.0f;
+		aperture = 0.1f;
+		focalDistance = 10.0f;
+		break;
+	case Scene::Earth:
+		world = Earth();
 		lookFrom = Point3(13.0f, 2.0f, 3.0f);
 		lookAt = Point3(0.0f, 0.0f, 0.0f);
 		fov = 20.0f;

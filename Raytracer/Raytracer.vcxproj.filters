@@ -16,6 +16,9 @@
     <Filter Include="Header Files\Objects">
       <UniqueIdentifier>{d02df652-35c6-471c-bc6e-e9e13fdea76a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\External">
+      <UniqueIdentifier>{eb1c06d7-7823-446a-bfca-a892410db1d4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Main.cpp">
@@ -64,6 +67,12 @@
     </ClInclude>
     <ClInclude Include="Perlin.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="External\stb_image.h">
+      <Filter>Header Files\External</Filter>
+    </ClInclude>
+    <ClInclude Include="StbImg.h">
+      <Filter>Header Files\External</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
