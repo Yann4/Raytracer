@@ -12,6 +12,7 @@ class Material
 {
 public:
 	virtual bool Scatter(const Ray& R, const HitRecord& Hit, Colour& Attenuation, Ray& Scattered) const = 0;
+	virtual Colour Emit(const float U, const float V, const Point3& P) const { return Colour{ 0.0f }; }
 };
 
 class Lambertian : public Material
@@ -95,4 +96,20 @@ private:
 	}
 private:
 	float m_IR;
+};
+
+class DiffuseLight : public Material
+{
+public:
+	DiffuseLight(std::shared_ptr<Texture> Emit) : m_Emit(Emit) {}
+	DiffuseLight(const Colour& Emit) : m_Emit(std::make_shared<SolidColour>(Emit)) {}
+
+	virtual bool Scatter(const Ray& R, const HitRecord& Hit, Colour& Attenuation, Ray& Scattered) const override { return false; }
+	virtual Colour Emit(const float u, const float v, const Point3& P) const override
+	{
+		return m_Emit->Value(u, v, P);
+	}
+
+private:
+	std::shared_ptr<Texture> m_Emit;
 };

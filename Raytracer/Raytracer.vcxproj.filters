@@ -74,5 +74,11 @@
     <ClInclude Include="StbImg.h">
       <Filter>Header Files\External</Filter>
     </ClInclude>
+    <ClInclude Include="AARect.h">
+      <Filter>Header Files\Objects</Filter>
+    </ClInclude>
+    <ClInclude Include="Box.h">
+      <Filter>Header Files\Objects</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
