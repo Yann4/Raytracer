@@ -4,4 +4,4 @@
 
 https://raytracing.github.io/books/RayTracingTheNextWeek.html up to 9.0
 
-Been using https://0xc0de.fr/webppm/ for ppm viewing
+Been using https://0xc0de.fr/webppm/ for ppm viewing (or https://openseeit.sourceforge.net/)
