@@ -3,6 +3,7 @@
 #include "Box.h"
 #include "Camera.h"
 #include "Common.h"
+#include "ConstantMedium.h"
 #include "Colour.h"
 #include "HittableList.h"
 #include "Material.h"
@@ -17,7 +18,7 @@
 #include <future>
 #include <vector>
 
-enum class Scene { Cover, Nuts, Noise, Earth, LightSimple, Cornell };
+enum class Scene { Cover, Nuts, Noise, Earth, LightSimple, Cornell, SmokeCornell, Final };
 
 struct ScanlineResult
 {
@@ -218,12 +219,107 @@ BoundingVolumeHierarchy CornellBox()
 	return BoundingVolumeHierarchy(objects);
 }
 
+BoundingVolumeHierarchy CornellSmoke() 
+{
+	HittableList objects;
+
+	std::shared_ptr<Material> red = std::make_shared<Lambertian>(Colour(0.65f, 0.05f, 0.05f));
+	std::shared_ptr<Material> white = std::make_shared<Lambertian>(Colour(0.73f));
+	std::shared_ptr<Material> green = std::make_shared<Lambertian>(Colour(0.12f, 0.45f, 0.15f));
+	std::shared_ptr<Material> light = std::make_shared<DiffuseLight>(Colour(7.0f));
+
+	objects.Add(std::make_shared<YZRect>(0.0f, 555.0f, 0.0f, 555.0f, 555.0f, green));
+	objects.Add(std::make_shared<YZRect>(0.0f, 555.0f, 0.0f, 555.0f, 0.0f, red));
+	objects.Add(std::make_shared<XZRect>(113.0f, 443.0f, 127.0f, 432.0f, 554.0f, light));
+	objects.Add(std::make_shared<XZRect>(0.0f, 555.0f, 0.0f, 555.0f, 0.0f, white));
+	objects.Add(std::make_shared<XZRect>(0.0f, 555.0f, 0.0f, 555.0f, 555.0f, white));
+	objects.Add(std::make_shared<XYRect>(0.0f, 555.0f, 0.0f, 555.0f, 555.0f, white));
+
+	std::shared_ptr<IHittable> box1 = std::make_shared<Box>(Point3(0.0f), Point3(165.0f, 330.0f, 165.0f), white);
+	box1 = std::make_shared<RotateY>(box1, 15.0f);
+	box1 = std::make_shared<Translate>(box1, Vec3(265.0f, 0.0f, 295.0f));
+
+	std::shared_ptr<IHittable> box2 = std::make_shared<Box>(Point3(0.0f), Point3(165.0f), white);
+	box2 = std::make_shared<RotateY>(box2, -18.0f);
+	box2 = std::make_shared<Translate>(box2, Vec3(130.0f, 0.0f, 65.0f));
+
+	objects.Add(std::make_shared<ConstantMedium>(box1, 0.01f, Colour(0.0f)));
+	objects.Add(std::make_shared<ConstantMedium>(box2, 0.01f, Colour(1.0f)));
+
+	return BoundingVolumeHierarchy(objects);
+}
+
+BoundingVolumeHierarchy FinalScene()
+{
+	HittableList boxes1;
+	std::shared_ptr<Material> ground = std::make_shared<Lambertian>(Colour(0.48f, 0.83f, 0.53f));
+
+	const int boxes_per_side = 20;
+	for (int i = 0; i < boxes_per_side; i++) {
+		for (int j = 0; j < boxes_per_side; j++) {
+			auto w = 100.0f;
+			auto x0 = -1000.0f + i * w;
+			auto z0 = -1000.0f + j * w;
+			auto y0 = 0.0f;
+			auto x1 = x0 + w;
+			auto y1 = Common::Random(1.0f, 101.0f);
+			auto z1 = z0 + w;
+
+			boxes1.Add(std::make_shared<Box>(Point3(x0, y0, z0), Point3(x1, y1, z1), ground));
+		}
+	}
+
+	HittableList objects;
+
+	objects.Add(std::make_shared<BoundingVolumeHierarchy>(boxes1, 0.0f, 1.0f));
+
+	std::shared_ptr<Material> light = std::make_shared<DiffuseLight>(Colour(7.0f));
+	objects.Add(std::make_shared<XZRect>(123.0f, 423.0f, 147.0f, 412.0f, 554.0f, light));
+
+	const Point3 center1 = Point3(400.0f, 400.0f, 200.0f);
+	const Point3 center2 = center1 + Vec3(30.0f, 0.0f, 0.0f);
+	std::shared_ptr<Material> movingSphereMat = std::make_shared<Lambertian>(Colour(0.7f, 0.3f, 0.1f));
+	objects.Add(std::make_shared<MovingSphere>(center1, center2, 0.0f, 1.0f, 50.0f, movingSphereMat));
+
+	objects.Add(std::make_shared<Sphere>(Point3(260.0f, 150.0f, 45.0f), 50.0f, std::make_shared<Dielectric>(1.5f)));
+	objects.Add(std::make_shared<Sphere>(
+		Point3(0.0f, 150.0f, 145.0f), 50.0f, std::make_shared<Metal>(Colour(0.8f, 0.8f, 0.9f), 1.0f)
+		));
+
+	std::shared_ptr<IHittable> boundary = std::make_shared<Sphere>(Point3(360.0f, 150.0f, 145.0f), 70.0f, std::make_shared<Dielectric>(1.5f));
+	objects.Add(boundary);
+	objects.Add(std::make_shared<ConstantMedium>(boundary, 0.2f, Colour(0.2f, 0.4f, 0.9f)));
+	boundary = std::make_shared<Sphere>(Point3(0.0f), 5000.0f, std::make_shared<Dielectric>(1.5f));
+	objects.Add(std::make_shared<ConstantMedium>(boundary, 0.0001f, Colour(1.0f)));
+
+	std::shared_ptr<Material> emat = std::make_shared<Lambertian>(std::make_shared<ImageTexture>("../../Assets/earthmap.jpg"));
+	objects.Add(std::make_shared<Sphere>(Point3(400.0f, 200.0f, 400.0f), 100.0f, emat));
+	std::shared_ptr<Texture> pertext = std::make_shared<NoiseTexture>(0.1f);
+	objects.Add(std::make_shared<Sphere>(Point3(220.0f, 280.0f, 300.0f), 80.0f, std::make_shared<Lambertian>(pertext)));
+
+	HittableList boxes2;
+	std::shared_ptr<Material> white = std::make_shared<Lambertian>(Colour(0.73f));
+	int ns = 1000;
+	for (int j = 0; j < ns; j++) {
+		boxes2.Add(std::make_shared<Sphere>(Point3::Random(0.0f, 165.0f), 10.0f, white));
+	}
+
+	objects.Add(std::make_shared<Translate>(
+		std::make_shared<RotateY>(
+			std::make_shared<BoundingVolumeHierarchy>(boxes2, 0.0f, 1.0f), 15.0f),
+		Vec3(-100.0f, 270.0f, 395.0f)
+		)
+	);
+
+	return BoundingVolumeHierarchy(objects);
+}
+
 int main(int argc, char** argv)
 {
 	using Clock = std::chrono::high_resolution_clock;
 	const auto startTime = Clock::now();
 
-	Settings settings{ 1200, 16.0f / 9.0f, 100, 100, Scene::Cornell, Colour{0.0f} };
+	Settings settings{ 1200, 16.0f / 9.0f, 50, 100, Scene::Final, Colour{0.0f} };
 
 	Point3 lookFrom;
 	Point3 lookAt;
@@ -275,6 +371,26 @@ int main(int argc, char** argv)
 		settings.SamplesPerPixel = 200;
 		settings.Background = Colour(0.0f);
 		lookFrom = Point3(278.0f, 278.0f, -800.0f);
+		lookAt = Point3(278.0f, 278.0f, 0.0f);
+		fov = 40.0f;
+		break;
+	case Scene::SmokeCornell:
+		world = CornellSmoke();
+		settings.AspectRatio = 1.0;
+		settings.Width = 600;
+		settings.SamplesPerPixel = 200;
+		settings.Background = Colour(0.0f);
+		lookFrom = Point3(278.0f, 278.0f, -800.0f);
+		lookAt = Point3(278.0f, 278.0f, 0.0f);
+		fov = 40.0f;
+		break;
+	case Scene::Final:
+		world = FinalScene();
+		settings.AspectRatio = 1.0;
+		settings.Width = 800;
+		settings.SamplesPerPixel = 10000;
+		settings.Background = Colour(0.0f);
+		lookFrom = Point3(478.0f, 278.0f, -600.0f);
 		lookAt = Point3(278.0f, 278.0f, 0.0f);
 		fov = 40.0f;
 		break;

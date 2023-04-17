@@ -102,7 +102,7 @@ class DiffuseLight : public Material
 {
 public:
 	DiffuseLight(std::shared_ptr<Texture> Emit) : m_Emit(Emit) {}
-	DiffuseLight(const Colour& Emit) : m_Emit(std::make_shared<SolidColour>(Emit)) {}
+	DiffuseLight(const Colour& Emit) : DiffuseLight(std::make_shared<SolidColour>(Emit)) {}
 
 	virtual bool Scatter(const Ray& R, const HitRecord& Hit, Colour& Attenuation, Ray& Scattered) const override { return false; }
 	virtual Colour Emit(const float u, const float v, const Point3& P) const override
@@ -112,4 +112,22 @@ public:
 
 private:
 	std::shared_ptr<Texture> m_Emit;
+};
+
+class Isotropic : public Material
+{
+public:
+	Isotropic(std::shared_ptr<Texture> Tex) : m_Albedo(Tex) {}
+	Isotropic(const Colour& Albedo) : Isotropic(std::make_shared<SolidColour>(Albedo)) {}
+
+	virtual bool Scatter(const Ray& R, const HitRecord& Hit, Colour& Attenuation, Ray& Scattered) const override
+	{
+		Scattered = Ray(Hit.Position, RandomInUnitSphere(), R.Time());
+		Attenuation = m_Albedo->Value(Hit.U, Hit.V, Hit.Position);
+
+		return true;
+	}
+
+private:
+	std::shared_ptr<Texture> m_Albedo;
 };
