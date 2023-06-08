@@ -319,7 +319,7 @@ int main(int argc, char** argv)
 	using Clock = std::chrono::high_resolution_clock;
 	const auto startTime = Clock::now();
 
-	Settings settings{ 1200, 16.0f / 9.0f, 50, 100, Scene::Final, Colour{0.0f} };
+	Settings settings{ 1200, 16.0f / 9.0f, 50, 500, Scene::Cover, Colour{0.0f} };
 
 	Point3 lookFrom;
 	Point3 lookAt;
@@ -410,7 +410,7 @@ int main(int argc, char** argv)
 		int runningThreads = 0;
 		for (int threadIdx = 0; threadIdx < ConcurrentThreadCount; threadIdx++)
 		{
-			if (scanLineIdx > 0)
+			if (scanLineIdx >= 0)
 			{
 				jobs[threadIdx] = std::async(&TraceScanline, scanLineIdx, camera, world, settings);
 				scanLineIdx--;
